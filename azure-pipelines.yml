@@ -26,10 +26,16 @@ stages:
 
     - script: |
         echo "Updating Terraform provider configuration..."
-        sed -i 's|<your-subscription-id>|${azureSubscription}|g' ./terraform/main.tf
-        sed -i 's|<servicePrincipalId>|${servicePrincipalId}|g' ./terraform/main.tf
-        sed -i 's|<servicePrincipalKey>|${servicePrincipalKey}|g' ./terraform/main.tf
-        sed -i 's|<tenant>|${tenant}|g' ./terraform/main.tf
+        if [ -f main.tf ]; then
+          sed -i 's|<your-subscription-id>|$(azureSubscription)|g' main.tf
+          sed -i 's|<servicePrincipalId>|$(servicePrincipalId)|g' main.tf
+          sed -i 's|<servicePrincipalKey>|$(servicePrincipalKey)|g' main.tf
+          sed -i 's|<tenant>|$(tenant)|g' main.tf
+        else
+          echo "File main.tf not found"
+          exit 1
+        fi
+      displayName: 'Update Terraform Configuration'
 
     - task: AzureCLI@2
       inputs:
@@ -55,7 +61,6 @@ stages:
         terraform -v
 
         echo "Running Terraform..."
-        cd ./terraform
         terraform init
         terraform plan
         terraform apply -auto-approve
