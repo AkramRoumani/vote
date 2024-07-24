@@ -24,6 +24,8 @@ stages:
         curl -LO https://releases.hashicorp.com/terraform/0.14.4/terraform_0.14.4_linux_amd64.zip
         unzip terraform_0.14.4_linux_amd64.zip
         sudo mv terraform /usr/local/bin/
+        sudo chmod +x /usr/local/bin/terraform
+        terraform -v
       displayName: 'Install Terraform'
 
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV1@0
