@@ -8,15 +8,13 @@ variables:
   kubernetesServiceConnection: 'kubernetesServiceConnection'
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
-  azureSubscription: 'azureSubscription'
+  azureSubscription: 'azureSubscription'  # Connexion de service Azure Resource Manager
   servicePrincipalId: 'b5a09f06-a808-4e6e-9db5-ddabfbe5b1b9'
   servicePrincipalKey: 'S9D8Q~sXS3m5P7MkXX0W3nQqkgJizq58NF7YzaM3'
   tenant: 'f3c594df-ac31-4c6f-9e7a-b84feed3a6e4'
 
 stages:
 - stage: ProvisionInfrastructure
-  variables:
-    - group: ServicePrincipalVariables  # Référence au groupe de variables
   jobs:
   - job: Terraform
     pool:
@@ -62,6 +60,10 @@ stages:
 
         echo "Running Terraform..."
         terraform init
+
+        echo "Importing existing resource group into Terraform state..."
+        terraform import azurerm_resource_group.rg /subscriptions/$(azureSubscription)/resourceGroups/$(aksClusterResourceGroup)
+
         terraform plan
         terraform apply -auto-approve
       displayName: 'Install and Run Terraform'
@@ -133,3 +135,4 @@ stages:
                 helm upgrade --install frontend ./helm-charts/frontend --set image.repository=$(containerRegistry)/voting-app-frontend --set image.tag=$(Build.BuildId)
                 helm upgrade --install backend ./helm-charts/backend --set image.repository=$(containerRegistry)/voting-app-backend --set image.tag=$(Build.BuildId)
             displayName: 'Deploy to AKS'
+
