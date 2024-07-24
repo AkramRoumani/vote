@@ -23,8 +23,10 @@ stages:
         #!/bin/bash
         curl -LO https://releases.hashicorp.com/terraform/0.14.4/terraform_0.14.4_linux_amd64.zip
         unzip terraform_0.14.4_linux_amd64.zip
-        sudo mv terraform /usr/bin/
-        sudo chmod +x /usr/bin/terraform
+        sudo mv terraform /usr/local/bin/
+        sudo chmod +x /usr/local/bin/terraform
+        echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
+        export PATH=$PATH:/usr/local/bin
         terraform -v
       displayName: 'Install Terraform'
 
