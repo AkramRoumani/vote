@@ -19,9 +19,12 @@ stages:
     steps:
     - checkout: self
 
-    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
-      inputs:
-        terraformVersion: '0.14.4'
+    - script: |
+        #!/bin/bash
+        curl -LO https://releases.hashicorp.com/terraform/0.14.4/terraform_0.14.4_linux_amd64.zip
+        unzip terraform_0.14.4_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+      displayName: 'Install Terraform'
 
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV1@0
       inputs:
