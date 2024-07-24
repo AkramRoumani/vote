@@ -2,13 +2,13 @@ trigger:
 - main
 
 variables:
-  dockerRegistryServiceConnection: '<nom_de_votre_service_de_connexion_docker>'
-  imageRepository: '<votre_nom_d_utilisateur>/voting-app'
-  containerRegistry: '<votre_registre_docker>'
-  kubernetesServiceConnection: '<nom_de_votre_service_de_connexion_kubernetes>'
+  dockerRegistryServiceConnection: 'dockerRegistryConnection'
+  imageRepository: 'mydockeruser/voting-app'
+  containerRegistry: 'mydockeruser'
+  kubernetesServiceConnection: 'kubernetesServiceConnection'
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
-  azureSubscription: '<votre_nom_d_abonnement_azure>'
+  azureSubscription: 'azureSubscription'
 
 stages:
 - stage: ProvisionInfrastructure
@@ -54,7 +54,7 @@ stages:
     - task: Docker@2
       inputs:
         containerRegistry: '$(dockerRegistryServiceConnection)'
-        repository: '$(imageRepository)/frontend'
+        repository: '$(containerRegistry)/voting-app-frontend'
         command: 'buildAndPush'
         Dockerfile: '**/frontend/Dockerfile'
         tags: |
@@ -69,7 +69,7 @@ stages:
     - task: Docker@2
       inputs:
         containerRegistry: '$(dockerRegistryServiceConnection)'
-        repository: '$(imageRepository)/backend'
+        repository: '$(containerRegistry)/voting-app-backend'
         command: 'buildAndPush'
         Dockerfile: '**/backend/Dockerfile'
         tags: |
@@ -97,6 +97,6 @@ stages:
               command: 'apply'
               useConfigurationFile: true
               configuration: |
-                helm upgrade --install frontend ./helm-charts/frontend --set image.repository=$(containerRegistry)/frontend --set image.tag=$(Build.BuildId)
-                helm upgrade --install backend ./helm-charts/backend --set image.repository=$(containerRegistry)/backend --set image.tag=$(Build.BuildId)
+                helm upgrade --install frontend ./helm-charts/frontend --set image.repository=$(containerRegistry)/voting-app-frontend --set image.tag=$(Build.BuildId)
+                helm upgrade --install backend ./helm-charts/backend --set image.repository=$(containerRegistry)/voting-app-backend --set image.tag=$(Build.BuildId)
             displayName: 'Deploy to AKS'
