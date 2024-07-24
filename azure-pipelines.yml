@@ -19,18 +19,17 @@ stages:
     steps:
     - checkout: self
 
-    - task: UseTerraform@0
+    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
       inputs:
         terraformVersion: '0.14.4'
-        
-    - task: AzureCLI@2
+
+    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV1@0
       inputs:
-        azureSubscription: $(azureSubscription)
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          terraform init
-          terraform apply -auto-approve
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: './terraform'
+        environmentServiceNameAzureRM: '$(azureSubscription)'
+        commandOptions: '-auto-approve'
       displayName: 'Run Terraform to Provision AKS'
 
 - stage: Build
