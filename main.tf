@@ -1,5 +1,10 @@
 provider "azurerm" {
   features {}
+
+  subscription_id = "<your-subscription-id>"
+  client_id       = "<servicePrincipalId>"
+  client_secret   = "<servicePrincipalKey>"
+  tenant_id       = "<tenant>"
 }
 
 resource "azurerm_resource_group" "rg" {
