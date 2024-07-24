@@ -9,6 +9,7 @@ variables:
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
   azureSubscription: 'azureSubscription'
+  azureRMServiceConnection: 'azureRMServiceConnection'
 
 stages:
 - stage: ProvisionInfrastructure
