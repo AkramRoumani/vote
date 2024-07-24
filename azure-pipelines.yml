@@ -8,7 +8,7 @@ variables:
   kubernetesServiceConnection: 'kubernetesServiceConnection'
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
-  azureSubscription: 'azureSubscription'  # Utilisation de la connexion azureSubscription
+  azureSubscription: 'azureSubscription'
 
 stages:
 - stage: ProvisionInfrastructure
@@ -21,6 +21,7 @@ stages:
 
     - script: |
         #!/bin/bash
+        echo "Installing Terraform..."
         curl -LO https://releases.hashicorp.com/terraform/0.14.4/terraform_0.14.4_linux_amd64.zip
         unzip terraform_0.14.4_linux_amd64.zip
         sudo mv terraform /usr/local/bin/
@@ -28,16 +29,12 @@ stages:
         echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
         export PATH=$PATH:/usr/local/bin
         terraform -v
-      displayName: 'Install Terraform'
 
-    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV1@0
-      inputs:
-        provider: 'azurerm'
-        command: 'apply'
-        workingDirectory: './terraform'
-        environmentServiceNameAzureRM: '$(azureSubscription)'  # Utilisation de azureSubscription
-        commandOptions: '-auto-approve'
-      displayName: 'Run Terraform to Provision AKS'
+        echo "Running Terraform..."
+        cd ./terraform
+        terraform init
+        terraform apply -auto-approve
+      displayName: 'Install and Run Terraform'
 
 - stage: Build
   dependsOn: ProvisionInfrastructure
@@ -96,7 +93,7 @@ stages:
           - task: Kubernetes@1
             inputs:
               connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: '$(azureSubscription)'  # Utilisation de azureSubscription
+              azureSubscriptionEndpoint: '$(azureSubscription)'
               azureResourceGroup: '$(aksClusterResourceGroup)'
               kubernetesCluster: '$(aksClusterName)'
               namespace: 'default'
