@@ -8,8 +8,7 @@ variables:
   kubernetesServiceConnection: 'kubernetesServiceConnection'
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
-  azureSubscription: 'azureSubscription'
-  azureRMServiceConnection: 'azureRMServiceConnection'
+  azureSubscription: 'azureSubscription'  # Utilisation de la connexion azureSubscription
 
 stages:
 - stage: ProvisionInfrastructure
@@ -29,7 +28,7 @@ stages:
         provider: 'azurerm'
         command: 'apply'
         workingDirectory: './terraform'
-        environmentServiceNameAzureRM: '$(azureSubscription)'
+        environmentServiceNameAzureRM: '$(azureSubscription)'  # Utilisation de azureSubscription
         commandOptions: '-auto-approve'
       displayName: 'Run Terraform to Provision AKS'
 
@@ -90,7 +89,7 @@ stages:
           - task: Kubernetes@1
             inputs:
               connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: '$(kubernetesServiceConnection)'
+              azureSubscriptionEndpoint: '$(azureSubscription)'  # Utilisation de azureSubscription
               azureResourceGroup: '$(aksClusterResourceGroup)'
               kubernetesCluster: '$(aksClusterName)'
               namespace: 'default'
