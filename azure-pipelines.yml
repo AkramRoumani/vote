@@ -12,6 +12,8 @@ variables:
 
 stages:
 - stage: ProvisionInfrastructure
+  variables:
+    - group: ServicePrincipalVariables  # Référence au groupe de variables
   jobs:
   - job: Terraform
     pool:
