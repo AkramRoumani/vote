@@ -1,0 +1,7 @@
+replicaCount: 1
+image:
+  repository: your-docker-registry/frontend
+  tag: latest
+service:
+  type: LoadBalancer
+  port: 80

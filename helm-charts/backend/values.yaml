@@ -1,0 +1,7 @@
+replicaCount: 1
+image:
+  repository: your-docker-registry/backend
+  tag: latest
+service:
+  type: LoadBalancer
+  port: 3000

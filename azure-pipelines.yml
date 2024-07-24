@@ -1,0 +1,102 @@
+trigger:
+- main
+
+variables:
+  dockerRegistryServiceConnection: '<nom_de_votre_service_de_connexion_docker>'
+  imageRepository: '<votre_nom_d_utilisateur>/voting-app'
+  containerRegistry: '<votre_registre_docker>'
+  kubernetesServiceConnection: '<nom_de_votre_service_de_connexion_kubernetes>'
+  aksClusterResourceGroup: 'aks-resource-group'
+  aksClusterName: 'aks-cluster'
+  azureSubscription: '<votre_nom_d_abonnement_azure>'
+
+stages:
+- stage: ProvisionInfrastructure
+  jobs:
+  - job: Terraform
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+
+    - task: UseTerraform@0
+      inputs:
+        terraformVersion: '0.14.4'
+        
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          terraform init
+          terraform apply -auto-approve
+      displayName: 'Run Terraform to Provision AKS'
+
+- stage: Build
+  dependsOn: ProvisionInfrastructure
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '14.x'
+      displayName: 'Install Node.js'
+
+    - script: |
+        cd frontend
+        npm install
+        npm run build
+      displayName: 'Build Frontend'
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)/frontend'
+        command: 'buildAndPush'
+        Dockerfile: '**/frontend/Dockerfile'
+        tags: |
+          $(Build.BuildId)
+      displayName: 'Build and Push Frontend Docker Image'
+
+    - script: |
+        cd backend
+        npm install
+      displayName: 'Install Backend Dependencies'
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)/backend'
+        command: 'buildAndPush'
+        Dockerfile: '**/backend/Dockerfile'
+        tags: |
+          $(Build.BuildId)
+      displayName: 'Build and Push Backend Docker Image'
+
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: Kubernetes@1
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscriptionEndpoint: '$(kubernetesServiceConnection)'
+              azureResourceGroup: '$(aksClusterResourceGroup)'
+              kubernetesCluster: '$(aksClusterName)'
+              namespace: 'default'
+              command: 'apply'
+              useConfigurationFile: true
+              configuration: |
+                helm upgrade --install frontend ./helm-charts/frontend --set image.repository=$(containerRegistry)/frontend --set image.tag=$(Build.BuildId)
+                helm upgrade --install backend ./helm-charts/backend --set image.repository=$(containerRegistry)/backend --set image.tag=$(Build.BuildId)
+            displayName: 'Deploy to AKS'
