@@ -9,6 +9,9 @@ variables:
   aksClusterResourceGroup: 'aks-resource-group'
   aksClusterName: 'aks-cluster'
   azureSubscription: 'azureSubscription'
+  servicePrincipalId: 'b5a09f06-a808-4e6e-9db5-ddabfbe5b1b9'
+  servicePrincipalKey: 'S9D8Q~sXS3m5P7MkXX0W3nQqkgJizq58NF7YzaM3'
+  tenant: 'f3c594df-ac31-4c6f-9e7a-b84feed3a6e4'
 
 stages:
 - stage: ProvisionInfrastructure
@@ -20,6 +23,13 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - checkout: self
+
+    - script: |
+        echo "Updating Terraform provider configuration..."
+        sed -i 's|<your-subscription-id>|${azureSubscription}|g' ./terraform/main.tf
+        sed -i 's|<servicePrincipalId>|${servicePrincipalId}|g' ./terraform/main.tf
+        sed -i 's|<servicePrincipalKey>|${servicePrincipalKey}|g' ./terraform/main.tf
+        sed -i 's|<tenant>|${tenant}|g' ./terraform/main.tf
 
     - task: AzureCLI@2
       inputs:
